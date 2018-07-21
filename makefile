@@ -7,23 +7,26 @@ OBJDIR=obj
 BINDIR=bin
 TARGET=$(shell basename $(CURDIR))
 
-CFLAGS=-Wall -O3
+CFLAGS=-Wall -g
 CPPFLAGS=$(CFLAGS) -std=c++17
-LIB=-lpthread -ldl
+LIB=-lpthread -ldl -lsfml-system -lsfml-network
 INC=-I$(INCDIR) -I/usr/local/include
 
-SOURCES=$(shell find $(SRCDIR) -type f)
-OBJECTS=$(patsubst $(SRCDIR)/%,$(OBJDIR)/%.o,$(basename $(SOURCES)))
+C_SOURCES=$(shell find $(SRCDIR) -type f -name "*.c")
+CPP_SOURCES=$(shell find $(SRCDIR) -type f ! -name "*.c")
 
-$(BINDIR)/$(TARGET): $(OBJECTS)
+C_OBJECTS=$(patsubst $(SRCDIR)/%,$(OBJDIR)/%.o,$(basename $(C_SOURCES)))
+CPP_OBJECTS=$(patsubst $(SRCDIR)/%,$(OBJDIR)/%.obj,$(basename $(CPP_SOURCES)))
+
+$(BINDIR)/$(TARGET): $(C_OBJECTS) $(CPP_OBJECTS)
 	@mkdir -pv $(BINDIR)
-	$(CXX) -o $(BINDIR)/$(TARGET) $^ $(LIB)
+	$(CXX) -Wl,-export-dynamic -o $(BINDIR)/$(TARGET) $^ $(LIB)
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
 	@mkdir -pv $(dir $@)
 	$(CC) $(CFLAGS) $(INC) -c -o $@ $<
 
-$(OBJDIR)/%.o: $(SRCDIR)/%.cpp
+$(OBJDIR)/%.obj: $(SRCDIR)/%.cpp
 	@mkdir -pv $(dir $@)
 	$(CXX) $(CPPFLAGS) $(INC) -c -o $@ $<
 
