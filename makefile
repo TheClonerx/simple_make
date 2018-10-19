@@ -2,33 +2,74 @@ CC=gcc
 CXX=g++
 
 SRCDIR=src
-INCDIR=inc
+INCDIR=include
 OBJDIR=obj
 BINDIR=bin
+LIBDIR=lib
 TARGET=$(shell basename $(CURDIR))
 
-CFLAGS=-Wall -g
-CPPFLAGS=$(CFLAGS) -std=c++17
-LIB=-lpthread -ldl -lsfml-system -lsfml-network
+#general compiler flags
+CFLAGS=-Wall -Wextra -std=c11
+CPPFLAGS=-Wall -Wextra -std=c++17
+
+#debug compiler flags
+CDFLAGS=-g3 -Og -ggdb
+CPPDFLAGS=-g3 -Og -ggdb
+
+#release compiler flags
+CRFLAGS=-O2 -DNDEBUG
+CPPRFLAGS=-O2 -DNDEBUG
+
+#aditional libs
+#example: LIB=-ldl -L/path/to/more/libs -lmy_lib
+LIB=
+#aditional include paths
 INC=-I$(INCDIR) -I/usr/local/include
+
+#general linker flags
+LINKFLAGS=-L$(LIBDIR) $(LIB)
+#debug linker flags
+LINKDFLAGS=
+#release linker flags
+LINKRFLAGS=-s
+
 
 C_SOURCES=$(shell find $(SRCDIR) -type f -name "*.c")
 CPP_SOURCES=$(shell find $(SRCDIR) -type f ! -name "*.c")
 
-C_OBJECTS=$(patsubst $(SRCDIR)/%,$(OBJDIR)/%.o,$(basename $(C_SOURCES)))
-CPP_OBJECTS=$(patsubst $(SRCDIR)/%,$(OBJDIR)/%.obj,$(basename $(CPP_SOURCES)))
+CD_OBJECTS=$(patsubst $(SRCDIR)/%,$(OBJDIR)/debug/%.o,$(basename $(C_SOURCES)))
+CPPD_OBJECTS=$(patsubst $(SRCDIR)/%,$(OBJDIR)/debug/%.obj,$(basename $(CPP_SOURCES)))
 
-$(BINDIR)/$(TARGET): $(C_OBJECTS) $(CPP_OBJECTS)
-	@mkdir -pv $(BINDIR)
-	$(CXX) -Wl,-export-dynamic -o $(BINDIR)/$(TARGET) $^ $(LIB)
+CR_OBJECTS=$(patsubst $(SRCDIR)/%,$(OBJDIR)/release/%.o,$(basename $(C_SOURCES)))
+CPPR_OBJECTS=$(patsubst $(SRCDIR)/%,$(OBJDIR)/release/%.obj,$(basename $(CPP_SOURCES)))
 
-$(OBJDIR)/%.o: $(SRCDIR)/%.c
+release: $(BINDIR)/release/$(TARGET)
+
+debug: $(BINDIR)/debug/$(TARGET)
+
+$(BINDIR)/release/$(TARGET): $(CR_OBJECTS) $(CPPR_OBJECTS)
 	@mkdir -pv $(dir $@)
-	$(CC) $(CFLAGS) $(INC) -c -o $@ $<
+	$(CXX) -o $@ $^ $(LINKFLAGS) $(LINKRFLAGS)
 
-$(OBJDIR)/%.obj: $(SRCDIR)/%.cpp
+$(BINDIR)/debug/$(TARGET): $(CD_OBJECTS) $(CPPD_OBJECTS)
 	@mkdir -pv $(dir $@)
-	$(CXX) $(CPPFLAGS) $(INC) -c -o $@ $<
+	$(CXX) -o $@ $^ $(LINKFLAGS) $(LINKDLAGS)
+
+$(OBJDIR)/debug/%.o: $(SRCDIR)/%.c
+	@mkdir -pv $(dir $@)
+	$(CC) -c -o $@ $< $(CFLAGS) $(CDFLAGS) $(INC)
+
+$(OBJDIR)/debug/%.obj: $(SRCDIR)/%.cpp
+	@mkdir -pv $(dir $@)
+	$(CXX) -c -o $@ $< $(CPPFLAGS) $(CPPDFLAGS) $(INC)
+
+$(OBJDIR)/release/%.o: $(SRCDIR)/%.c
+	@mkdir -pv $(dir $@)
+	$(CC) -c -o $@ $< $(CFLAGS) $(CRFLAGS) $(INC)
+
+$(OBJDIR)/release/%.obj: $(SRCDIR)/%.cpp
+	@mkdir -pv $(dir $@)
+	$(CXX) -c -o $@ $< $(CPPFLAGS) $(CPPRFLAGS) $(INC)
 
 clean:
 	@rm -rfv $(BINDIR) $(OBJDIR)
