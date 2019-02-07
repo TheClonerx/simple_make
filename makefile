@@ -34,40 +34,35 @@ LINKDFLAGS=
 LINKRFLAGS=-s
 
 
-C_SOURCES=$(shell find $(SRCDIR) -type f -name "*.c")
-CPP_SOURCES=$(shell find $(SRCDIR) -type f ! -name "*.c")
-
-CD_OBJECTS=$(patsubst $(SRCDIR)/%,$(OBJDIR)/debug/%.o,$(basename $(C_SOURCES)))
-CPPD_OBJECTS=$(patsubst $(SRCDIR)/%,$(OBJDIR)/debug/%.obj,$(basename $(CPP_SOURCES)))
-
-CR_OBJECTS=$(patsubst $(SRCDIR)/%,$(OBJDIR)/release/%.o,$(basename $(C_SOURCES)))
-CPPR_OBJECTS=$(patsubst $(SRCDIR)/%,$(OBJDIR)/release/%.obj,$(basename $(CPP_SOURCES)))
+SOURCES=$(shell find $(SRCDIR) -type f)
+D_OBJECTS=$(patsubst $(SRCDIR)/%,$(OBJDIR)/debug/%.o,$(SOURCES))
+R_OBJECTS=$(patsubst $(SRCDIR)/%,$(OBJDIR)/release/%.o,$(SOURCES))
 
 release: $(BINDIR)/release/$(TARGET)
 
 debug: $(BINDIR)/debug/$(TARGET)
 
-$(BINDIR)/release/$(TARGET): $(CR_OBJECTS) $(CPPR_OBJECTS)
+$(BINDIR)/release/$(TARGET): $(R_OBJECTS)
 	@mkdir -pv $(dir $@)
 	$(CXX) -o $@ $^ $(LINKFLAGS) $(LINKRFLAGS)
 
-$(BINDIR)/debug/$(TARGET): $(CD_OBJECTS) $(CPPD_OBJECTS)
+$(BINDIR)/debug/$(TARGET): $(D_OBJECTS)
 	@mkdir -pv $(dir $@)
 	$(CXX) -o $@ $^ $(LINKFLAGS) $(LINKDLAGS)
 
-$(OBJDIR)/debug/%.o: $(SRCDIR)/%.c
+$(OBJDIR)/debug/%.c.o: $(SRCDIR)/%.c
 	@mkdir -pv $(dir $@)
 	$(CC) -c -o $@ $< $(CFLAGS) $(CDFLAGS) $(INC)
 
-$(OBJDIR)/debug/%.obj: $(SRCDIR)/%.cpp
+$(OBJDIR)/debug/%.cpp.o: $(SRCDIR)/%.cpp
 	@mkdir -pv $(dir $@)
 	$(CXX) -c -o $@ $< $(CPPFLAGS) $(CPPDFLAGS) $(INC)
 
-$(OBJDIR)/release/%.o: $(SRCDIR)/%.c
+$(OBJDIR)/release/%.c.o: $(SRCDIR)/%.c
 	@mkdir -pv $(dir $@)
 	$(CC) -c -o $@ $< $(CFLAGS) $(CRFLAGS) $(INC)
 
-$(OBJDIR)/release/%.obj: $(SRCDIR)/%.cpp
+$(OBJDIR)/release/%.cpp.o: $(SRCDIR)/%.cpp
 	@mkdir -pv $(dir $@)
 	$(CXX) -c -o $@ $< $(CPPFLAGS) $(CPPRFLAGS) $(INC)
 
