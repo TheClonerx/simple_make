@@ -13,8 +13,8 @@ CFLAGS=-Wall -Wextra -std=c11
 CPPFLAGS=-Wall -Wextra -std=c++17
 
 #debug compiler flags
-CDFLAGS=-g3 -Og -ggdb
-CPPDFLAGS=-g3 -Og -ggdb
+CDFLAGS=-g -O0
+CPPDFLAGS=-g -O0
 
 #release compiler flags
 CRFLAGS=-O2 -DNDEBUG
